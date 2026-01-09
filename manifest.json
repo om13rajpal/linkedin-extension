@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn Data Extractor",
+  "version": "2.4.0",
+  "description": "Extract your LinkedIn profile data, analytics, and network insights",
+  "author": "AGI Ready",
+
+  "permissions": [
+    "cookies",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://www.linkedin.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://*.linkedin.com/*"],
+      "js": ["content/main-world-interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://*.linkedin.com/*"],
+      "js": [
+        "content/dom-extractor.js",
+        "content/content-script.js"
+      ],
+      "css": ["content/styles.css"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "LinkedIn Data Extractor"
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["content/injected.js"],
+      "matches": ["https://*.linkedin.com/*"]
+    }
+  ]
+}

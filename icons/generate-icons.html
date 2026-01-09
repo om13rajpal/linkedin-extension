@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Icon Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    .canvas-container { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+    canvas { border: 1px solid #ccc; background: white; }
+    .info { margin: 5px 0; font-size: 12px; color: #666; }
+    button { padding: 10px 20px; background: #0077b5; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+    button:hover { background: #005885; }
+  </style>
+</head>
+<body>
+  <h1>LinkedIn Data Extractor - Icon Generator</h1>
+  <p>Click each button to download the icon in that size.</p>
+
+  <div class="canvas-container">
+    <div>
+      <canvas id="c16" width="16" height="16"></canvas>
+      <div class="info">16x16</div>
+      <button onclick="download(16)">Download</button>
+    </div>
+    <div>
+      <canvas id="c32" width="32" height="32"></canvas>
+      <div class="info">32x32</div>
+      <button onclick="download(32)">Download</button>
+    </div>
+    <div>
+      <canvas id="c48" width="48" height="48"></canvas>
+      <div class="info">48x48</div>
+      <button onclick="download(48)">Download</button>
+    </div>
+    <div>
+      <canvas id="c128" width="128" height="128"></canvas>
+      <div class="info">128x128</div>
+      <button onclick="download(128)">Download</button>
+    </div>
+  </div>
+
+  <button onclick="downloadAll()">Download All Icons</button>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+
+    function drawIcon(ctx, size) {
+      const s = size / 128; // Scale factor
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#0077b5');
+      grad.addColorStop(1, '#00a0dc');
+
+      // Background circle
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(64 * s, 64 * s, 56 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // White elements
+      ctx.fillStyle = 'white';
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 4 * s;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Database ellipse
+      ctx.beginPath();
+      ctx.ellipse(64 * s, 40 * s, 26 * s, 9 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Database sides
+      ctx.beginPath();
+      ctx.moveTo(38 * s, 40 * s);
+      ctx.lineTo(38 * s, 58 * s);
+      ctx.bezierCurveTo(38 * s, 66 * s, 50 * s, 70 * s, 64 * s, 70 * s);
+      ctx.bezierCurveTo(78 * s, 70 * s, 90 * s, 66 * s, 90 * s, 58 * s);
+      ctx.lineTo(90 * s, 40 * s);
+      ctx.stroke();
+
+      // Middle ellipse line
+      ctx.beginPath();
+      ctx.moveTo(38 * s, 49 * s);
+      ctx.bezierCurveTo(38 * s, 57 * s, 50 * s, 61 * s, 64 * s, 61 * s);
+      ctx.bezierCurveTo(78 * s, 61 * s, 90 * s, 57 * s, 90 * s, 49 * s);
+      ctx.stroke();
+
+      // Download arrow
+      ctx.lineWidth = 5 * s;
+      ctx.beginPath();
+      ctx.moveTo(64 * s, 68 * s);
+      ctx.lineTo(64 * s, 92 * s);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(54 * s, 82 * s);
+      ctx.lineTo(64 * s, 92 * s);
+      ctx.lineTo(74 * s, 82 * s);
+      ctx.stroke();
+    }
+
+    // Draw all sizes
+    sizes.forEach(size => {
+      const canvas = document.getElementById('c' + size);
+      const ctx = canvas.getContext('2d');
+      drawIcon(ctx, size);
+    });
+
+    function download(size) {
+      const canvas = document.getElementById('c' + size);
+      const link = document.createElement('a');
+      link.download = 'icon' + size + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadAll() {
+      sizes.forEach((size, i) => {
+        setTimeout(() => download(size), i * 200);
+      });
+    }
+  </script>
+</body>
+</html>

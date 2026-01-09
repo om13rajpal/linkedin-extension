@@ -1,0 +1,19 @@
+# Claude Code tool directories
+.claude/
+.claude-flow/
+.hive-mind/
+
+# Node modules (if added later)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local

@@ -1,0 +1,255 @@
+/**
+ * LinkedIn Data Extractor - Content Script Styles
+ *
+ * Styles for any UI elements injected into LinkedIn pages.
+ */
+
+/* ============================================
+   FLOATING INDICATOR
+   ============================================ */
+
+#linkedin-extractor-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0077b5 0%, #00a0dc 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 119, 181, 0.4);
+  cursor: pointer;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0.9;
+}
+
+#linkedin-extractor-indicator:hover {
+  transform: scale(1.1);
+  opacity: 1;
+  box-shadow: 0 6px 20px rgba(0, 119, 181, 0.5);
+}
+
+#linkedin-extractor-indicator svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+#linkedin-extractor-indicator.capturing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 119, 181, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 119, 181, 0.8);
+  }
+}
+
+/* ============================================
+   NOTIFICATION BADGE
+   ============================================ */
+
+#linkedin-extractor-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: #e74c3c;
+  border-radius: 9px;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+
+#linkedin-extractor-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  max-width: 300px;
+  background: #333;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 999998;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+#linkedin-extractor-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#linkedin-extractor-toast.success {
+  background: #27ae60;
+}
+
+#linkedin-extractor-toast.error {
+  background: #e74c3c;
+}
+
+#linkedin-extractor-toast.info {
+  background: #0077b5;
+}
+
+/* ============================================
+   DATA HIGHLIGHT OVERLAY
+   ============================================ */
+
+.linkedin-extractor-highlight {
+  outline: 2px solid rgba(0, 119, 181, 0.5) !important;
+  background-color: rgba(0, 119, 181, 0.05) !important;
+  transition: all 0.2s ease;
+}
+
+.linkedin-extractor-highlight:hover {
+  outline: 2px solid rgba(0, 119, 181, 0.8) !important;
+  background-color: rgba(0, 119, 181, 0.1) !important;
+}
+
+/* ============================================
+   MINI PANEL (Optional expandable panel)
+   ============================================ */
+
+#linkedin-extractor-panel {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 999997;
+  overflow: hidden;
+  display: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#linkedin-extractor-panel.visible {
+  display: block;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#linkedin-extractor-panel-header {
+  background: linear-gradient(135deg, #0077b5 0%, #00a0dc 100%);
+  color: white;
+  padding: 12px 16px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#linkedin-extractor-panel-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+#linkedin-extractor-panel-close:hover {
+  opacity: 1;
+}
+
+#linkedin-extractor-panel-content {
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#linkedin-extractor-panel-content h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#linkedin-extractor-panel-content .stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+#linkedin-extractor-panel-content .stat-label {
+  color: #333;
+}
+
+#linkedin-extractor-panel-content .stat-value {
+  font-weight: 600;
+  color: #0077b5;
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  #linkedin-extractor-panel {
+    background: #1d2226;
+    color: #fff;
+  }
+
+  #linkedin-extractor-panel-content .stat-row {
+    border-bottom-color: #38434f;
+  }
+
+  #linkedin-extractor-panel-content .stat-label {
+    color: #fff;
+  }
+
+  #linkedin-extractor-toast {
+    background: #1d2226;
+  }
+}
+
+/* LinkedIn's dark mode class */
+body.theme--dark #linkedin-extractor-panel {
+  background: #1d2226;
+  color: #fff;
+}
+
+body.theme--dark #linkedin-extractor-panel-content .stat-row {
+  border-bottom-color: #38434f;
+}
+
+body.theme--dark #linkedin-extractor-panel-content .stat-label {
+  color: #fff;
+}

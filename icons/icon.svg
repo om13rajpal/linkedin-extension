@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0077b5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00a0dc;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#grad)"/>
+  <!-- Data/extraction icon -->
+  <g fill="white">
+    <!-- Database icon -->
+    <ellipse cx="64" cy="45" rx="28" ry="10" fill="white" opacity="0.9"/>
+    <path d="M36 45 v20 c0 5.5 12.5 10 28 10 s28-4.5 28-10 v-20" fill="none" stroke="white" stroke-width="4"/>
+    <path d="M36 55 c0 5.5 12.5 10 28 10 s28-4.5 28-10" fill="none" stroke="white" stroke-width="4"/>
+    <!-- Download arrow -->
+    <path d="M64 70 L64 95 M54 85 L64 95 L74 85" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

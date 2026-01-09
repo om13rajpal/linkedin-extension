@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Analytics Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+
+    <!-- Header with Logo -->
+    <header class="app-header">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        <span>Analytics Pro</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-refresh" class="btn-icon-sm" title="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.63-6.36M21 3v6h-6"/></svg>
+        </button>
+        <div class="status-indicator" id="status-indicator">
+          <span class="status-pulse"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-pills">
+      <button class="nav-pill active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-pill" data-view="connections">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Network</span>
+      </button>
+      <button class="nav-pill" data-view="insights">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+        <span>Insights</span>
+      </button>
+      <button class="nav-pill" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard View -->
+      <div id="dashboard-view" class="view active">
+        <!-- Profile Card -->
+        <div class="profile-card glass">
+          <div class="profile-bg"></div>
+          <div class="profile-content">
+            <div class="profile-avatar-wrapper">
+              <div class="profile-avatar" id="profile-avatar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              <span class="profile-badge" id="premium-badge" style="display:none;">PRO</span>
+            </div>
+            <div class="profile-details">
+              <h1 id="profile-name">LinkedIn User</h1>
+              <p class="profile-headline" id="profile-headline">Connect to see your profile</p>
+              <div class="profile-tags">
+                <span class="tag" id="profile-location">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>-</span>
+                </span>
+                <span class="tag" id="profile-industry">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+                  <span>-</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card glass" data-type="connections">
+            <div class="stat-icon-wrapper blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-connections" data-value="0">-</span>
+              <span class="stat-label">Connections</span>
+            </div>
+            <div class="stat-trend up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+              <span id="connections-growth">-</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass" data-type="views">
+            <div class="stat-icon-wrapper green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-views" data-value="0">-</span>
+              <span class="stat-label">Profile Views</span>
+            </div>
+            <div class="stat-trend up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+              <span id="views-growth">-</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass" data-type="search">
+            <div class="stat-icon-wrapper purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-search" data-value="0">-</span>
+              <span class="stat-label">Search Hits</span>
+            </div>
+            <div class="stat-trend neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+              <span>-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-card glass">
+          <div class="card-header">
+            <h3>Network Growth</h3>
+            <div class="chart-tabs">
+              <button class="chart-tab active" data-period="week">7D</button>
+              <button class="chart-tab" data-period="month">30D</button>
+              <button class="chart-tab" data-period="year">1Y</button>
+            </div>
+          </div>
+          <div class="chart-area" id="chart-area">
+            <div class="chart-placeholder" id="chart-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-6 6"/></svg>
+              <p>Fetch data to see growth trends</p>
+            </div>
+          </div>
+          <div class="chart-legend" id="chart-legend"></div>
+        </div>
+
+        <!-- Content Insights -->
+        <div class="content-insights glass">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;color:var(--accent-green)">
+                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                <path d="M12 22V12M3.27 6.96L12 12.01l8.73-5.05"/>
+              </svg>
+              Content Insights
+            </h3>
+            <span class="viewer-badge" id="captured-posts-count">0</span>
+          </div>
+          <div class="insights-mini-grid">
+            <div class="insight-mini">
+              <span class="insight-label">Avg Engagement</span>
+              <span class="insight-value" id="avg-engagement">-</span>
+            </div>
+            <div class="insight-mini">
+              <span class="insight-label">Trending Hashtags</span>
+              <div class="hashtags-list" id="top-hashtags">
+                <span class="empty-hint">Scroll feed to capture</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Hits - Viral Posts -->
+        <div class="posts-section glass">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;color:var(--accent-orange)">
+                <path d="M12 2c.5 5.5 5 8.5 5 12a5 5 0 01-10 0c0-3.5 4.5-6.5 5-12z"/>
+              </svg>
+              Top Hits in Network
+            </h3>
+            <span class="viewer-badge" id="posts-count">0</span>
+          </div>
+          <div class="posts-scroll" id="posts-list">
+            <div class="empty-state mini">
+              <p>Browse your LinkedIn feed to capture top posts</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card glass">
+          <div class="card-header">
+            <h3>Recent Profile Viewers</h3>
+            <span class="viewer-badge" id="viewer-count">0</span>
+          </div>
+          <div class="viewers-scroll" id="viewers-list">
+            <div class="empty-state mini">
+              <p>No viewers data available</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="btn-fetch" class="btn-primary-large">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Fetch LinkedIn Data</span>
+          <div class="btn-shine"></div>
+        </button>
+      </div>
+
+      <!-- Connections View -->
+      <div id="connections-view" class="view">
+        <div class="search-container glass">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="search-connections" placeholder="Search your network...">
+          <span class="search-count"><span id="showing-count">0</span>/<span id="total-count">0</span></span>
+        </div>
+
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="recent">Recent</button>
+          <button class="chip" data-filter="company">Same Company</button>
+        </div>
+
+        <div class="connections-grid" id="connections-list">
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <h4>No connections loaded</h4>
+            <p>Fetch your LinkedIn data to see your network</p>
+            <button id="btn-load-connections" class="btn-secondary">Load Network</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insights View -->
+      <div id="insights-view" class="view">
+        <div class="insights-grid">
+          <!-- Your Posts Analytics -->
+          <div class="insight-card glass full-width">
+            <div class="card-header">
+              <h3>Your Posts Performance</h3>
+              <span class="viewer-badge" id="my-posts-count">0</span>
+            </div>
+            <div class="my-posts-stats">
+              <div class="stat-mini">
+                <span class="stat-mini-value" id="total-impressions">-</span>
+                <span class="stat-mini-label">Total Impressions</span>
+              </div>
+              <div class="stat-mini">
+                <span class="stat-mini-value" id="avg-engagement-rate">-</span>
+                <span class="stat-mini-label">Avg Engagement</span>
+              </div>
+              <div class="stat-mini">
+                <span class="stat-mini-value" id="my-avg-likes">-</span>
+                <span class="stat-mini-label">Avg Likes</span>
+              </div>
+            </div>
+            <div id="best-post" class="best-post-container">
+              <p class="empty-hint">Visit your profile Activity to capture your posts analytics</p>
+            </div>
+          </div>
+
+          <!-- Top Comments -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Top Comments</h3>
+              <span class="viewer-badge" id="comments-count">0</span>
+            </div>
+            <div class="comments-stats">
+              <div class="stat-row-mini">
+                <span>Top Comments (5+ likes)</span>
+                <span class="stat-value-mini" id="top-comments-count">0</span>
+              </div>
+              <div class="stat-row-mini">
+                <span>Avg Length</span>
+                <span class="stat-value-mini" id="avg-comment-length">0</span>
+              </div>
+            </div>
+            <div id="top-comments-list" class="top-comments-list">
+              <p class="empty-hint">Click on post comments to capture</p>
+            </div>
+          </div>
+
+          <!-- Followers -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Followers</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div class="follower-stats">
+              <div class="follower-count-big" id="follower-count">-</div>
+              <span class="follower-label">Total Followers</span>
+              <div class="follower-detail">
+                <span>Captured: <span id="followers-list-count">0</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Industry Breakdown -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Top Industries</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+            <div class="industry-list" id="industry-list">
+              <div class="empty-state mini">
+                <p>No data yet</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Company Distribution -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Top Companies</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            </div>
+            <div class="company-list" id="company-list">
+              <div class="empty-state mini">
+                <p>No data yet</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Map -->
+          <div class="insight-card glass full-width">
+            <div class="card-header">
+              <h3>Network Locations</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            </div>
+            <div class="location-bars" id="location-list">
+              <div class="empty-state mini">
+                <p>No location data available</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network Stats -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Network Score</h3>
+            </div>
+            <div class="score-display">
+              <div class="score-ring">
+                <svg viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                  <circle id="score-circle" cx="60" cy="60" r="54" fill="none" stroke="url(#scoreGradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29" transform="rotate(-90 60 60)"/>
+                  <defs>
+                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#0a66c2"/>
+                      <stop offset="100%" style="stop-color:#70b5f9"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span class="score-value" id="network-score">-</span>
+              </div>
+              <p class="score-label">Based on network diversity</p>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="insight-card glass">
+            <div class="card-header">
+              <h3>Quick Export</h3>
+            </div>
+            <div class="export-buttons">
+              <button id="btn-export-json" class="export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/></svg>
+                <span>JSON</span>
+              </button>
+              <button id="btn-export-csv" class="export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h2M8 17h2M14 13h2M14 17h2"/></svg>
+                <span>CSV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="settings-view" class="view">
+        <div class="settings-group glass">
+          <h3 class="settings-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Data & Privacy
+          </h3>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Auto-capture API calls</span>
+              <span class="setting-desc">Automatically save LinkedIn data when browsing</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-auto-capture" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Store profile pictures</span>
+              <span class="setting-desc">Cache avatar images locally</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-store-images" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-group glass">
+          <h3 class="settings-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Export Options
+          </h3>
+
+          <div class="export-options">
+            <button id="btn-export-all-json" class="btn-outline full">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              Export All as JSON
+            </button>
+            <button id="btn-export-all-csv" class="btn-outline full">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              Export Connections as CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-group glass danger">
+          <h3 class="settings-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>
+            Danger Zone
+          </h3>
+
+          <button id="btn-clear-data" class="btn-danger full">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+            Clear All Stored Data
+          </button>
+        </div>
+
+        <div class="settings-group glass">
+          <h3 class="settings-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Capture Status
+          </h3>
+          <div class="capture-status">
+            <div class="capture-stat">
+              <span class="capture-label">Captured API Calls</span>
+              <span class="capture-value" id="captured-apis-count">0</span>
+            </div>
+            <div class="capture-stat">
+              <span class="capture-label">Feed Posts Captured</span>
+              <span class="capture-value" id="settings-feed-posts-count">0</span>
+            </div>
+            <p class="capture-hint">Browse LinkedIn feed to capture posts passively. Scroll through your feed to capture more engaging content for analysis.</p>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <span class="version">LinkedIn Analytics Pro v2.0</span>
+          <span class="copyright">Built with care</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <span id="loading-text">Loading...</span>
+        <div class="loading-progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden">
+      <div class="toast-icon" id="toast-icon"></div>
+      <span id="toast-message"></span>
+    </div>
+  </div>
+
+  <script src="popup.js?v=7"></script>
+</body>
+</html>
