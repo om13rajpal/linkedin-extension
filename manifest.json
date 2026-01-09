@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Data Extractor",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "description": "Extract your LinkedIn profile data, analytics, and network insights",
   "author": "AGI Ready",
 

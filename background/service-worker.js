@@ -28,6 +28,8 @@ const STORAGE_KEYS = {
   AUTH_DATA: 'linkedin_auth',
   PROFILE_DATA: 'linkedin_profile',
   ANALYTICS_DATA: 'linkedin_analytics',
+  POST_ANALYTICS_DATA: 'linkedin_post_analytics',
+  AUDIENCE_DATA: 'linkedin_audience',
   CONNECTIONS_DATA: 'linkedin_connections',
   POSTS_DATA: 'linkedin_posts',
   FEED_POSTS: 'linkedin_feed_posts',
@@ -549,6 +551,107 @@ async function saveTrendingToStorage(newTopics) {
     return { success: true, count: allTopics.length };
   } catch (error) {
     console.error('[ServiceWorker] Error saving trending:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Save individual post analytics with deduplication by activity URN
+ */
+async function savePostAnalyticsToStorage(newData) {
+  try {
+    if (!newData || !newData.activityUrn) {
+      return { success: false, error: 'No activity URN provided' };
+    }
+
+    const existing = await getFromStorage(STORAGE_KEYS.POST_ANALYTICS_DATA);
+    let existingData = existing.data || { posts: [], stats: {} };
+    let allPosts = existingData.posts || [];
+
+    // Find existing post by URN
+    const existingIndex = allPosts.findIndex(p => p.activityUrn === newData.activityUrn);
+
+    if (existingIndex >= 0) {
+      // Update existing post analytics
+      allPosts[existingIndex] = {
+        ...allPosts[existingIndex],
+        ...newData,
+        lastUpdated: new Date().toISOString()
+      };
+    } else {
+      // Add new post analytics
+      allPosts.push({
+        ...newData,
+        firstCaptured: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    // Sort by impressions (highest first)
+    allPosts.sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+
+    // Keep top 100 posts
+    allPosts = allPosts.slice(0, 100);
+
+    // Calculate aggregate stats
+    const totalImpressions = allPosts.reduce((sum, p) => sum + (p.impressions || 0), 0);
+    const totalReactions = allPosts.reduce((sum, p) => sum + (p.engagement?.reactions || 0), 0);
+    const totalComments = allPosts.reduce((sum, p) => sum + (p.engagement?.comments || 0), 0);
+    const avgEngagementRate = allPosts.length > 0
+      ? (allPosts.reduce((sum, p) => sum + (parseFloat(p.engagementRate) || 0), 0) / allPosts.length).toFixed(2)
+      : '0';
+
+    const postAnalyticsData = {
+      posts: allPosts,
+      totalCount: allPosts.length,
+      lastUpdated: new Date().toISOString(),
+      stats: {
+        totalImpressions,
+        totalReactions,
+        totalComments,
+        avgEngagementRate,
+        avgImpressions: allPosts.length > 0 ? Math.round(totalImpressions / allPosts.length) : 0,
+        avgReactions: allPosts.length > 0 ? Math.round(totalReactions / allPosts.length) : 0
+      }
+    };
+
+    await saveToStorage(STORAGE_KEYS.POST_ANALYTICS_DATA, postAnalyticsData);
+    console.log(`[ServiceWorker] Post analytics saved: ${allPosts.length} posts, latest: ${newData.activityUrn}`);
+
+    return {
+      success: true,
+      totalCount: allPosts.length,
+      isUpdate: existingIndex >= 0
+    };
+  } catch (error) {
+    console.error('[ServiceWorker] Error saving post analytics:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Save audience/follower data to storage
+ */
+async function saveAudienceDataToStorage(newData) {
+  try {
+    if (!newData) {
+      return { success: false, error: 'No audience data provided' };
+    }
+
+    const audienceData = {
+      ...newData,
+      lastUpdated: new Date().toISOString()
+    };
+
+    await saveToStorage(STORAGE_KEYS.AUDIENCE_DATA, audienceData);
+    console.log(`[ServiceWorker] Audience data saved: ${newData.totalFollowers} followers`);
+
+    return {
+      success: true,
+      totalFollowers: newData.totalFollowers
+    };
+  } catch (error) {
+    console.error('[ServiceWorker] Error saving audience data:', error);
     return { success: false, error: error.message };
   }
 }
@@ -1211,7 +1314,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
 
       case 'ANALYTICS_CAPTURED':
+        console.log('[ServiceWorker] ANALYTICS_CAPTURED received:', message.data);
         response = await saveToStorage(STORAGE_KEYS.ANALYTICS_DATA, message.data);
+        console.log('[ServiceWorker] Analytics saved to storage:', response);
+        break;
+
+      case 'POST_ANALYTICS_CAPTURED':
+        console.log('[ServiceWorker] POST_ANALYTICS_CAPTURED received:', message.data?.activityUrn);
+        response = await savePostAnalyticsToStorage(message.data);
+        console.log('[ServiceWorker] Post analytics saved:', response);
+        break;
+
+      case 'AUDIENCE_DATA_CAPTURED':
+        console.log('[ServiceWorker] AUDIENCE_DATA_CAPTURED received:', message.data?.totalFollowers);
+        response = await saveAudienceDataToStorage(message.data);
+        console.log('[ServiceWorker] Audience data saved:', response);
         break;
 
       case 'SAVE_FEED_POSTS':

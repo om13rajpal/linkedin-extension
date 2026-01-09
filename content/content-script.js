@@ -149,14 +149,71 @@
    * Save analytics data to storage
    */
   async function saveAnalyticsData(data) {
+    console.log('[ContentScript] saveAnalyticsData called with:', JSON.stringify(data, null, 2));
     try {
-      await sendToBackground({
+      const response = await sendToBackground({
         type: 'ANALYTICS_CAPTURED',
         data: data
       });
+      console.log('[ContentScript] Analytics save response:', response);
       state.capturedData.analytics = data;
+      console.log('[ContentScript] Analytics saved successfully');
     } catch (error) {
       console.error('[ContentScript] Error saving analytics data:', error);
+    }
+  }
+
+  /**
+   * Save post analytics data to storage
+   */
+  async function savePostAnalyticsData(data) {
+    console.log('[ContentScript] savePostAnalyticsData called with:', JSON.stringify(data, null, 2));
+    try {
+      const response = await sendToBackground({
+        type: 'POST_ANALYTICS_CAPTURED',
+        data: data
+      });
+      console.log('[ContentScript] Post analytics save response:', response);
+
+      // Store in local state array
+      if (!state.capturedData.postAnalytics) {
+        state.capturedData.postAnalytics = [];
+      }
+
+      // Update or add post analytics by URN
+      const existingIndex = state.capturedData.postAnalytics.findIndex(
+        p => p.activityUrn === data.activityUrn
+      );
+      if (existingIndex >= 0) {
+        state.capturedData.postAnalytics[existingIndex] = data;
+      } else {
+        state.capturedData.postAnalytics.push(data);
+      }
+
+      console.log('[ContentScript] Post analytics saved successfully');
+    } catch (error) {
+      console.error('[ContentScript] Error saving post analytics data:', error);
+    }
+  }
+
+  /**
+   * Save audience/follower data to storage
+   */
+  async function saveAudienceData(data) {
+    console.log('[ContentScript] saveAudienceData called with:', JSON.stringify(data, null, 2));
+    try {
+      const response = await sendToBackground({
+        type: 'AUDIENCE_DATA_CAPTURED',
+        data: data
+      });
+      console.log('[ContentScript] Audience data save response:', response);
+
+      // Store in local state
+      state.capturedData.audienceData = data;
+
+      console.log('[ContentScript] Audience data saved successfully');
+    } catch (error) {
+      console.error('[ContentScript] Error saving audience data:', error);
     }
   }
 
@@ -386,25 +443,34 @@
     // Debug: log the structure we received
     console.log('[ContentScript] Feed API data keys:', Object.keys(apiData));
 
-    // LinkedIn GraphQL returns 'included' at root level
-    const included = apiData.included || [];
+    // FIXED: LinkedIn GraphQL returns 'included' at ROOT level of response, not inside data
+    // The structure is: { data: { feedDashMainFeedByMainFeed: {...} }, included: [...] }
+    const included = apiData.included || data.included || [];
 
     // For GraphQL, also check for nested data structures
     let elements = apiData.elements || [];
 
     // GraphQL feed response structure varies - check multiple patterns
+    // Check inside data.data (apiData) and also apiData.data for nested structures
     const feedData = apiData.feedDashMainFeedByMainFeed ||
-                     apiData.data?.feedDashMainFeedByMainFeed ||
                      apiData.feedDashRecommendedFeedByRecommendedFeed ||
+                     apiData.data?.feedDashMainFeedByMainFeed ||
+                     apiData.data?.feedDashRecommendedFeedByRecommendedFeed ||
                      apiData.data;
 
     if (feedData?.elements) {
       elements = feedData.elements;
     }
-    if (feedData?.['*elements']) {
-      // Element URN references - need to resolve from included
+
+    // Handle *elements URN references
+    if (feedData?.['*elements'] && included.length > 0) {
       const elementRefs = feedData['*elements'] || [];
       console.log('[ContentScript] GraphQL feed found', elementRefs.length, 'element refs');
+      // Resolve URN references to actual elements from included
+      elementRefs.forEach(urn => {
+        const resolved = included.find(i => i.entityUrn === urn);
+        if (resolved) elements.push(resolved);
+      });
     }
 
     console.log('[ContentScript] Processing feed - included:', included.length, 'elements:', elements.length);
@@ -416,37 +482,39 @@
     const commentaryMap = {};
 
     included.forEach(item => {
-      const type = item.$type || '';
-      const urn = item.entityUrn || item['*update'] || '';
+      // FIXED: Handle both $type and _type (LinkedIn uses both formats)
+      const type = item.$type || item._type || item['$type'] || '';
+      const urn = item.entityUrn || item['*update'] || item.urn || '';
 
       // Feed updates
-      if (type.includes('Update') || type.includes('Activity')) {
+      if (type.includes('Update') || type.includes('Activity') || type.includes('FeedUpdate')) {
         updateMap[urn] = item;
       }
 
-      // Actors (authors)
-      if (type.includes('Actor') || type.includes('MiniProfile')) {
+      // Actors (authors) - check multiple patterns
+      if (type.includes('Actor') || type.includes('MiniProfile') || type.includes('Member') || type.includes('Profile')) {
         actorMap[urn] = item;
       }
 
       // Social details (likes, comments, shares)
-      if (type.includes('SocialDetail') || type.includes('SocialActivity')) {
+      if (type.includes('SocialDetail') || type.includes('SocialActivity') || type.includes('SocialCount')) {
         socialDetailMap[urn] = item;
       }
 
       // Commentary (post content)
-      if (type.includes('Commentary') || type.includes('Share')) {
+      if (type.includes('Commentary') || type.includes('Share') || type.includes('Text')) {
         commentaryMap[urn] = item;
       }
     });
 
     // Process updates from included array
     included.forEach(item => {
-      const type = item.$type || '';
+      // FIXED: Handle both $type and _type
+      const type = item.$type || item._type || '';
 
       // Look for feed update items - check multiple type patterns
       if ((type.includes('Update') || type.includes('FeedUpdate') || type.includes('Activity')) &&
-          (item.actor || item['*actor'] || item.actorComponent)) {
+          (item.actor || item['*actor'] || item.actorComponent || item.updateMetadata)) {
         const post = extractPostData(item, actorMap, socialDetailMap, included);
         if (post && (post.text || post.urn)) {
           posts.push(post);
@@ -456,7 +524,7 @@
 
     // Also process elements array if present
     elements.forEach(element => {
-      if (element.actor || element['*actor'] || element.actorComponent) {
+      if (element.actor || element['*actor'] || element.actorComponent || element.updateMetadata) {
         const post = extractPostData(element, actorMap, socialDetailMap, included);
         if (post && (post.text || post.urn)) {
           posts.push(post);
@@ -468,8 +536,9 @@
     if (posts.length === 0 && included.length > 0) {
       console.log('[ContentScript] No posts found, trying broader extraction...');
       included.forEach(item => {
-        const type = item.$type || '';
-        if (type.includes('Update') || type.includes('Post') || type.includes('Share')) {
+        // FIXED: Handle both $type and _type
+        const type = item.$type || item._type || '';
+        if (type.includes('Update') || type.includes('Post') || type.includes('Share') || type.includes('Feed')) {
           const post = extractPostData(item, actorMap, socialDetailMap, included);
           if (post && post.urn) {
             posts.push(post);
@@ -1148,8 +1217,23 @@
 
       case 'analytics':
         const analyticsData = window.LinkedInDOMExtractor.extractAnalyticsData();
+        console.log('[ContentScript] Extracted analytics data:', analyticsData);
         if (analyticsData) {
+          console.log('[ContentScript] Calling saveAnalyticsData...');
           saveAnalyticsData(analyticsData);
+        } else {
+          console.log('[ContentScript] No analytics data extracted');
+        }
+        break;
+
+      case 'post_analytics':
+        const postAnalyticsData = window.LinkedInDOMExtractor.extractPostAnalyticsData();
+        console.log('[ContentScript] Extracted post analytics data:', postAnalyticsData);
+        if (postAnalyticsData && postAnalyticsData.activityUrn) {
+          console.log('[ContentScript] Calling savePostAnalyticsData...');
+          savePostAnalyticsData(postAnalyticsData);
+        } else {
+          console.log('[ContentScript] No post analytics data extracted or missing activityUrn');
         }
         break;
     }
@@ -1270,6 +1354,23 @@
 
     // Listen for Response.json captures (backup)
     document.addEventListener('linkedin-response-json', handleCapturedApi);
+
+    // Listen for post analytics data from page context
+    // IMPORTANT: Use document.addEventListener because document is shared between worlds
+    document.addEventListener('linkedin-post-analytics-extracted', (event) => {
+      console.log('[ContentScript] Post analytics extracted event received');
+      if (event.detail) {
+        savePostAnalyticsData(event.detail);
+      }
+    });
+
+    // Listen for audience data from page context
+    document.addEventListener('linkedin-audience-data-extracted', (event) => {
+      console.log('[ContentScript] Audience data extracted event received');
+      if (event.detail) {
+        saveAudienceData(event.detail);
+      }
+    });
 
     // Set up navigation listener for SPA page changes
     setupNavigationListener();

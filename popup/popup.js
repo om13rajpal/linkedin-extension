@@ -254,21 +254,275 @@
 
     state.analytics = analytics;
 
-    // Profile views
+    // Profile views (old format)
     if (analytics.profileViews !== undefined) {
       animateValue(elements.statViews, 0, analytics.profileViews);
       if (elements.viewsGrowth) elements.viewsGrowth.textContent = '+' + (analytics.profileViewsGrowth || '0%');
     }
 
-    // Search appearances
+    // Search appearances (old format)
     if (analytics.searchAppearances !== undefined) {
       animateValue(elements.statSearch, 0, analytics.searchAppearances);
+    }
+
+    // Creator Analytics - Impressions (new format)
+    if (analytics.impressions !== undefined) {
+      // Display impressions in the views card if no profile views
+      if (analytics.profileViews === undefined) {
+        animateValue(elements.statViews, 0, analytics.impressions);
+        // Update label to show "Impressions" instead of "Profile Views"
+        const viewsLabel = document.querySelector('[data-type="views"] .stat-label');
+        if (viewsLabel) viewsLabel.textContent = 'Impressions';
+      }
+      // Also update growth if available
+      if (analytics.changes && analytics.changes.length > 0 && elements.viewsGrowth) {
+        elements.viewsGrowth.textContent = analytics.changes[0];
+      }
+    }
+
+    // Creator Analytics - Members Reached (new format)
+    if (analytics.membersReached !== undefined) {
+      // Display in search card if no search appearances
+      if (analytics.searchAppearances === undefined) {
+        animateValue(elements.statSearch, 0, analytics.membersReached);
+        // Update label to show "Reached" instead of "Search Hits"
+        const searchLabel = document.querySelector('[data-type="search"] .stat-label');
+        if (searchLabel) searchLabel.textContent = 'Reached';
+      }
     }
 
     // Recent viewers
     if (analytics.recentViewers && analytics.recentViewers.length > 0) {
       renderViewers(analytics.recentViewers);
     }
+
+    // Creator Analytics - Top Posts (new format)
+    if (analytics.topPosts && analytics.topPosts.length > 0) {
+      console.log('[Popup] Creator Analytics top posts:', analytics.topPosts.length);
+    }
+  }
+
+  /**
+   * Update display with detailed post analytics
+   */
+  function updatePostAnalytics(postAnalyticsData) {
+    if (!postAnalyticsData) return;
+
+    console.log('[Popup] Post analytics loaded:', postAnalyticsData.totalCount || 0, 'posts');
+
+    // Store in state
+    state.postAnalytics = postAnalyticsData;
+
+    // Update posts list with detailed analytics if available
+    if (postAnalyticsData.posts && postAnalyticsData.posts.length > 0) {
+      renderPostAnalytics(postAnalyticsData.posts);
+    }
+
+    // Update stats display if we have aggregate stats
+    if (postAnalyticsData.stats) {
+      const stats = postAnalyticsData.stats;
+
+      // Update total impressions display
+      const totalImpressionsEl = $('#total-impressions');
+      if (totalImpressionsEl) {
+        animateValue(totalImpressionsEl, 0, stats.totalImpressions || 0);
+      }
+
+      // Update avg engagement rate
+      const avgEngagementEl = $('#avg-engagement-rate');
+      if (avgEngagementEl) {
+        avgEngagementEl.textContent = (stats.avgEngagementRate || '0') + '%';
+      }
+
+      console.log('[Popup] Post analytics stats:', stats);
+    }
+  }
+
+  /**
+   * Render detailed post analytics cards
+   */
+  function renderPostAnalytics(posts) {
+    const postsList = $('#posts-list') || $('#post-analytics-list');
+    if (!postsList) return;
+
+    // Clear existing content
+    postsList.innerHTML = '';
+
+    // Sort by impressions (handle both data structures)
+    const sortedPosts = [...posts].sort((a, b) => {
+      const impA = a.discovery?.impressions || a.impressions || 0;
+      const impB = b.discovery?.impressions || b.impressions || 0;
+      return impB - impA;
+    });
+
+    // Render top posts
+    sortedPosts.slice(0, 10).forEach((post, index) => {
+      // Handle both old and new data structures
+      const impressions = post.discovery?.impressions || post.impressions || 0;
+      const membersReached = post.discovery?.membersReached || 0;
+      const reactions = post.socialEngagement?.reactions || post.engagement?.reactions || 0;
+      const comments = post.socialEngagement?.comments || post.engagement?.comments || 0;
+      const reposts = post.socialEngagement?.reposts || 0;
+      const profileViewers = post.profileActivity?.profileViewers || 0;
+      const postText = post.postText || post.postContent || 'Post content';
+
+      const card = document.createElement('div');
+      card.className = 'post-analytics-card';
+      card.innerHTML = `
+        <div class="post-rank">#${index + 1}</div>
+        <div class="post-content">
+          <div class="post-text">${truncateText(postText, 80)}</div>
+          <div class="post-metrics">
+            <span class="metric" title="Impressions">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              </svg>
+              ${formatNumber(impressions)}
+            </span>
+            <span class="metric" title="Members Reached">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+              ${formatNumber(membersReached)}
+            </span>
+            <span class="metric" title="Reactions">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              ${formatNumber(reactions)}
+            </span>
+            <span class="metric" title="Comments">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+              </svg>
+              ${formatNumber(comments)}
+            </span>
+            ${post.engagementRate ? `<span class="metric engagement-rate" title="Engagement Rate">${post.engagementRate}%</span>` : ''}
+          </div>
+          <div class="post-extra-metrics">
+            ${profileViewers > 0 ? `<span class="extra-metric">Profile Views: ${profileViewers}</span>` : ''}
+            ${reposts > 0 ? `<span class="extra-metric">Reposts: ${reposts}</span>` : ''}
+          </div>
+          ${post.demographics && post.demographics.length > 0 ? `
+            <div class="post-demographics">
+              ${post.demographics.slice(0, 3).map(d => `<span class="demo-tag">${d.value}: ${d.percentage}%</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <div class="post-age">${post.postAge || ''}</div>
+      `;
+
+      // Add click handler to open post
+      card.addEventListener('click', () => {
+        if (post.activityUrn) {
+          const postUrl = `https://www.linkedin.com/feed/update/${post.activityUrn}/`;
+          chrome.tabs.create({ url: postUrl });
+        }
+      });
+
+      postsList.appendChild(card);
+    });
+
+    // Update posts count
+    if (elements.postsCount) {
+      elements.postsCount.textContent = posts.length;
+    }
+  }
+
+  /**
+   * Update display with audience/follower data
+   */
+  function updateAudienceData(audienceData) {
+    if (!audienceData) return;
+
+    console.log('[Popup] Audience data loaded:', audienceData.totalFollowers, 'followers');
+
+    // Store in state
+    state.audienceData = audienceData;
+
+    // Update total followers
+    const totalFollowersEl = $('#total-followers');
+    if (totalFollowersEl) {
+      animateValue(totalFollowersEl, 0, audienceData.totalFollowers || 0);
+    }
+
+    // Update follower growth
+    const followerGrowthEl = $('#follower-growth');
+    if (followerGrowthEl && audienceData.followerGrowth) {
+      followerGrowthEl.textContent = audienceData.followerGrowth;
+    }
+
+    // Render audience demographics
+    if (audienceData.demographics) {
+      renderAudienceDemographics(audienceData.demographics);
+    }
+  }
+
+  /**
+   * Render audience demographics breakdown
+   */
+  function renderAudienceDemographics(demographics) {
+    // Update industry list
+    if (elements.industryList && demographics.industries) {
+      elements.industryList.innerHTML = demographics.industries.slice(0, 5).map(item => `
+        <div class="insight-item">
+          <span class="insight-label">${item.value}</span>
+          <div class="insight-bar-container">
+            <div class="insight-bar" style="width: ${item.percentage}%"></div>
+          </div>
+          <span class="insight-value">${item.percentage}%</span>
+        </div>
+      `).join('');
+    }
+
+    // Update company list
+    if (elements.companyList && demographics.topCompanies) {
+      elements.companyList.innerHTML = demographics.topCompanies.slice(0, 5).map(item => `
+        <div class="insight-item">
+          <span class="insight-label">${item.value}</span>
+          <div class="insight-bar-container">
+            <div class="insight-bar" style="width: ${item.percentage * 10}%"></div>
+          </div>
+          <span class="insight-value">${item.percentage}%</span>
+        </div>
+      `).join('');
+    }
+
+    // Update location list
+    if (elements.locationList && demographics.locations) {
+      elements.locationList.innerHTML = demographics.locations.slice(0, 5).map(item => `
+        <div class="insight-item">
+          <span class="insight-label">${item.value}</span>
+          <div class="insight-bar-container">
+            <div class="insight-bar" style="width: ${item.percentage}%"></div>
+          </div>
+          <span class="insight-value">${item.percentage}%</span>
+        </div>
+      `).join('');
+    }
+
+    // Update seniority/experience display if element exists
+    const seniorityList = $('#seniority-list');
+    if (seniorityList && demographics.seniority) {
+      seniorityList.innerHTML = demographics.seniority.slice(0, 5).map(item => `
+        <div class="insight-item">
+          <span class="insight-label">${item.value}</span>
+          <div class="insight-bar-container">
+            <div class="insight-bar" style="width: ${item.percentage}%"></div>
+          </div>
+          <span class="insight-value">${item.percentage}%</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  /**
+   * Truncate text with ellipsis
+   */
+  function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   function updateAuthStatus(isAuthenticated) {
@@ -803,6 +1057,18 @@
       const analyticsResponse = await sendMessage({ type: 'GET_DATA', key: 'linkedin_analytics' });
       if (analyticsResponse.data) {
         updateAnalytics(analyticsResponse.data);
+      }
+
+      // Get post analytics (individual post performance)
+      const postAnalyticsResponse = await sendMessage({ type: 'GET_DATA', key: 'linkedin_post_analytics' });
+      if (postAnalyticsResponse.data) {
+        updatePostAnalytics(postAnalyticsResponse.data);
+      }
+
+      // Get audience/follower data
+      const audienceResponse = await sendMessage({ type: 'GET_DATA', key: 'linkedin_audience' });
+      if (audienceResponse.data) {
+        updateAudienceData(audienceResponse.data);
       }
 
       // Get connections
